@@ -30,12 +30,12 @@ DESCRIPTION
     CGI::Screen keeps track of the CGI parameters used in your screen and
     passes old parameters which are not used in the current screen.
 
-    It highjacks the parameters `screen_'*, `user' and `passwd' to dispatch
-    the different screens the script implements. The `user' and `passwd'
-    fields are used if you use the builtin simple authentication. In general
-    you should advice your HTTP server to do authentication. But sometimes
-    it is convenient to check the authentication at the script level.
-    Especially if you do not have access to yours servers configuration.
+    It highjacks the parameters `screen_'* to dispatch the different screens
+    the script implements. The `screen_user' and `screen_passwd' fields are
+    used if you enable the builtin simple authentication. In general you
+    should advice your HTTP server to do authentication. But sometimes it is
+    convenient to check the authentication at the script level. Especially
+    if you do not have access to yours servers configuration.
 
   The constructor `new'
 
@@ -90,11 +90,11 @@ DESCRIPTION
 
   Moving between screens
 
-    Use the method `goto' to produce code to switch to another screen. You
-    can also produce an anchor instead of a button by calling
-    `link_to_screen' instead of `goto_screen'. For convenience, CGI::Screen
-    keeps track of the last screen for you so that you can link to the
-    previous page:
+    Use the method `goto_screen' to produce a button for switching to
+    another screen. You can also produce an anchor instead of a button by
+    calling `link_to_screen' instead of `goto_screen'. For convenience,
+    CGI::Screen keeps track of the last screen for you so that you can link
+    to the previous page:
 
       my $screen = $query->last_screen;
       print
@@ -112,10 +112,10 @@ DESCRIPTION
     should return a string.
 
     `application'
-    The `application' application method returns a string which is used in
-    the default `title' and `headline' callbacks. The Default method returns
-    the string `"CGI::Screen Test"' and should definitely be overwritten by
-    your application.
+    The `application' method returns a string which is used in the default
+    `title' and `headline' callbacks. The Default method returns the string
+    `"CGI::Screen Test"' and should definitely be overwritten by your
+    application.
 
     `title'
     The result of the method is used in the HTTP header and in the default
@@ -148,7 +148,8 @@ DESCRIPTION
       }
 
     If you do not like the default login screen, overwrite with your own
-    `login_screen'. Use the CGI parameters `user' and `passwd'.
+    `login_screen'. Use the CGI parameters `screen_user' and
+    `screen_passwd'.
 
   Customizing the Title
 
@@ -244,7 +245,7 @@ AUTHOR
     Ulrich Pfeifer <pfeifer@wait.de>
 
 SEE ALSO
-    The CGI(3) manual and the demo CGI script screen included in the
+    The CGI(3) manual and the demo CGI script eg/screen included in the
     distribution.
 
 ACKNOWLEDGEMENTS

@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.16 $
+# $Revision: 1.17 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Tue Dec 30 09:52:44 1997
+# Last Modified On: Tue Mar  3 12:20:42 1998
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (8-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (9-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -53,8 +53,8 @@ sub last_screen {
 
 sub _check_auth_user {
   my $query  = shift;
-  my $user   = $query->param('user')   or return;
-  my $passwd = $query->param('passwd') or return;
+  my $user   = $query->param('screen_user')   or return;
+  my $passwd = $query->param('screen_passwd') or return;
 
 
   $query->check_auth_user($user, $passwd);
@@ -236,10 +236,10 @@ sub login_screen {
     $query->table
       (
        $query->TR($query->td('Login'),
-                  $query->td($query->textfield('-name' => 'user')),
+                  $query->td($query->textfield('-name' => 'screen_user')),
                  ),
        $query->TR($query->td('Passwd'),
-                  $query->td($query->password_field('-name'=>'passwd')),
+                  $query->td($query->password_field('-name'=>'screen_passwd')),
                  )
       );
   print
@@ -315,13 +315,13 @@ callback methods.
 CGI::Screen keeps track of the CGI parameters used in your screen and
 passes old parameters which are not used in the current screen.
 
-It highjacks the parameters C<screen_>*, C<user> and C<passwd> to
-dispatch the different screens the script implements. The C<user> and
-C<passwd> fields are used if you use the builtin simple
-authentication.  In general you should advice your HTTP server to do
-authentication. But sometimes it is convenient to check the
-authentication at the script level. Especially if you do not have access
-to yours servers configuration.
+It highjacks the parameters C<screen_>* to dispatch the different
+screens the script implements. The C<screen_user> and C<screen_passwd>
+fields are used if you enable the builtin simple authentication.  In
+general you should advice your HTTP server to do authentication. But
+sometimes it is convenient to check the authentication at the script
+level. Especially if you do not have access to yours servers
+configuration.
 
 =head2 The constructor C<new>
 
@@ -377,9 +377,9 @@ navigation between the screens:
 
 =head2 Moving between screens
 
-Use the method C<goto> to produce code to switch to another screen.
-You can also produce an anchor instead of a button by calling
-C<link_to_screen> instead of C<goto_screen>. For convenience,
+Use the method C<goto_screen> to produce a button for switching to
+another screen.  You can also produce an anchor instead of a button by
+calling C<link_to_screen> instead of C<goto_screen>. For convenience,
 CGI::Screen keeps track of the last screen for you so that you can
 link to the previous page:
 
@@ -400,7 +400,7 @@ should return a string.
 
 =item C<application>
 
-The C<application> application method returns a string which is used
+The C<application> method returns a string which is used
 in the default C<title> and C<headline> callbacks. The Default method
 returns the string C<"CGI::Screen Test"> and should definitely be
 overwritten by your application.
@@ -441,7 +441,8 @@ C<check_auth_ip>.
 
 
 If you do not like the default login screen, overwrite with your own
-C<login_screen>. Use the CGI parameters C<user> and C<passwd>.
+C<login_screen>. Use the CGI parameters C<screen_user> and
+C<screen_passwd>.
 
 =head2 Customizing the Title
 
@@ -538,7 +539,7 @@ Ulrich Pfeifer E<lt>F<pfeifer@wait.de>E<gt>
 
 =head1 SEE ALSO
 
-The CGI(3) manual and the demo CGI script F<screen> included in the
+The CGI(3) manual and the demo CGI script F<eg/screen> included in the
 distribution.
 
 =head1 ACKNOWLEDGEMENTS
