@@ -47,7 +47,18 @@ DESCRIPTION
     If the first parameter of `new' is the string `-screen' the
     second argument must be a hash reference specifying the options
     for the subclass. Other parameters are passed to the constructor
-    of `CGI'. Currently no options are used.
+    of `CGI'.
+
+    `-dont_cut_loops'
+        Normaly the history of pages will not extended if the
+        current page is the same as the last page. So looping on a
+        page will not change the result of the `last_screen' method.
+        If the option `-dont_cut_loops' is provided and true, the
+        page will recorded twice. A third visit will be interpreted
+        as jump back to the first visit.
+
+        _That sounds weird. Will have to figure out a way to
+        recognize back jumps independent of the history._
 
   Adding Screens
 
@@ -277,8 +288,8 @@ ACKNOWLEDGEMENTS
     fruitfully discussion about the design of this module.
 
 Copyright
-    The *CGI::Screen* module is Copyright (c) 1997 Ulrich Pfeifer.
-    Germany. All rights reserved.
+    The *CGI::Screen* module is Copyright (c) 1997,1998 Ulrich
+    Pfeifer. Germany. All rights reserved.
 
     You may distribute under the terms of either the GNU General
     Public License or the Artistic License, as specified in the Perl

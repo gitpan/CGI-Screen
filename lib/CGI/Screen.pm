@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.25 $
+# $Revision: 1.29 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Fri Jul 10 21:52:31 1998
+# Last Modified On: Sun Jul 12 22:52:58 1998
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (17-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (21-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -38,7 +38,10 @@ sub _set_screen {
   if ( @screen_last_name > 1 and $screen_last_name[-2] eq $screen) {
     # User did hit a 'back' button
     pop @screen_last_name; pop @screen_last_title;
-  } elsif (@screen_last_name and $screen_last_name[-1] ne $screen) {
+  } elsif (not $self->{dont_cut_loops} and
+           @screen_last_name and $screen_last_name[-1] eq $screen) {
+    # Do nothing. We did jump to the same screen again
+  } else {
     while (@screen_last_name > 7) {shift @screen_last_name; shift @screen_last_title;}
     push @screen_last_name,  $self->{screen_name};
     push @screen_last_title, $self->{screen_title};
@@ -55,7 +58,7 @@ sub last_screen {
   my $self = shift;
   
   if (wantarray) {
-    ($self->{screen_last_name}, $self->{screen_last_title});
+    ($self->{screen_last_name}, $self->{screen_last_title}||$self->{screen_last_name});
   } else {
     $self->{screen_last_name};
   }
@@ -137,7 +140,8 @@ sub import {
         if (@_ and $_[0] eq '-name') {
           $self->{passed}->{$_[1]} = 1;
         }
-        &{"CGI::$sym"}($self->{cgi}, @_);
+        #print "CGI $sym(@_)\n";
+        &{"CGI::$sym"}(@_);
       }
     }
   }
@@ -395,7 +399,21 @@ configuration.
 If the first parameter of C<new> is the string C<-screen> the second
 argument must be a hash reference specifying the options for the
 subclass. Other parameters are passed to the constructor of C<CGI>.
-Currently no options are used.
+
+=over
+
+=item C<-dont_cut_loops>
+
+Normaly the history of pages will not extended if the current page is
+the same as the last page. So looping on a page will not change the
+result of the C<last_screen> method. If the option C<-dont_cut_loops>
+is provided and true, the page will recorded twice. A third visit will
+be interpreted as jump back to the first visit.
+
+I<That sounds weird. Will have to figure out a way to recognize back
+jumps independent of the history.>
+
+=back
 
 =head2 Adding Screens
 
@@ -540,7 +558,8 @@ to start your screens.
 
   sub headline { $_[0]->h1(title(@_)) }
 
-You should overwrite the C<application> method if you use the default title and headline.
+You should overwrite the C<application> method if you use the default
+title and headline.
 
   sub application { 'CGI::Screen Test' }
 
@@ -631,7 +650,7 @@ fruitfully discussion about the design of this module.
 
 =head1 Copyright
 
-The B<CGI::Screen> module is Copyright (c) 1997 Ulrich
+The B<CGI::Screen> module is Copyright (c) 1997,1998 Ulrich
 Pfeifer. Germany.  All rights reserved.
 
 You may distribute under the terms of either the GNU General Public

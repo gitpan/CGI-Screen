@@ -4,4 +4,5 @@ Makefile.PL
 lib/CGI/Screen.pm
 eg/screen
 README
-test.pl
+t/import.t
+t/method.t

@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 #                              -*- Mode: Perl -*- 
 # $Basename: screen $
-# $Revision: 1.20 $
+# $Revision: 1.22 $
 # Author          : Ulrich Pfeifer
 # Created On      : Sun Nov 30 17:38:52 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Sun Jun 28 13:18:58 1998
+# Last Modified On: Sun Jul 12 18:20:12 1998
 # Language        : CPerl
-# Update Count    : 44
+# Update Count    : 58
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
@@ -22,11 +22,11 @@ use CGI::Screen qw(:all);
 use vars qw(@ISA);
 @ISA = qw(CGI::Screen::Debug); # use 'CGI::Screen' if your application works
 
-my $query = __PACKAGE__->new;
+my $query = __PACKAGE__->new(-screen => {dont_cut_loops => 1});
 
 $query->dispatch;
 
-#unkomment this to test authentication
+#uncomment this to test authentication
 #sub check_auth_user {
 # my ($query, $user, $passwd) = @_;
 #
@@ -42,7 +42,7 @@ sub trailer {
   $query->hr .
     $query->new_form .
       $query->goto_screen('source', 'See screen source') .
-        $query->goto_screen('env', 'Show CGI environement') . 
+        $query->goto_screen('env', 'Show CGI environment') . 
           $query->goto_screen('main', 'Main screen') .
             $query->goto_screen('manual', 'See manual') .
               $query->goto_screen('rate', 'Rating')
@@ -75,7 +75,7 @@ sub rate_screen {
                         ),
      $query->p('What features does the module exhibit?'),
      $query->checkbox_group(
-                            '-name'      => 'fetures',
+                            '-name'      => 'features',
                             '-values'    => [
                                              'easy to use',
                                              'compact',
@@ -119,7 +119,7 @@ sub env_screen {
   for (keys %ENV) {
     push @tab, $query->TR($query->td($_) , $query->td($ENV{$_}));
   }
-  print $query->h1('CGI Environement') . $query->table(@tab);
+  print $query->h1('CGI Environment') . $query->table(@tab);
 }
 
 
@@ -151,7 +151,7 @@ sub media_screen {
   my $query = shift;
 
   print
-    $query->p('You choosed:',
+    $query->p('You choose:',
               $query->img({src => $query->url_to_screen('gif')})),
     $query->link_to_screen('gif', 'GIF only');
 
@@ -217,7 +217,13 @@ sub manual_screen {
 
   my $fh = new IO::File "> /tmp/screen.$$" or die; # hate Pod::Text 
 
-  Pod::Text::pod2text('-72', $INC{"CGI/Screen.pm"}, $fh);
+  if ($Pod::Text::VERSION >= 2) { # Thanks Brad ;-(
+    $ENV{PATH} = '/bin:/usr/bin:/usr/local/bin'; # Thanks again
+    Pod::Text::pod2text($INC{"CGI/Screen.pm"}, $fh);
+  } else {
+    Pod::Text::pod2text('-72', $INC{"CGI/Screen.pm"}, $fh);
+  }
+  
   
   $fh = new IO::File "< /tmp/screen.$$" or die;
   print "<LISTING>\n";

@@ -1,3 +1,9 @@
+Sun Jul 12 18:29:43 1998  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* lib/CGI/Screen.pm (_set_screen): Added dont_cut_loops flag.
+	(t): Test with CGI.pm-2.42 regression tests. Snarfed some of the
+ 	tests to make cpan-testers happy ;-)
+
 Fri Jul 10 21:52:38 1998  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* lib/CGI/Screen.pm (_set_screen): Jumps to the same screen are
