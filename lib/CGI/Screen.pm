@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.30 $
+# $Revision: 1.27 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Wed Jul 22 20:31:39 1998
+# Last Modified On: Fri Feb  5 17:05:16 1999
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (22-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (22))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -99,7 +99,7 @@ sub new {
   }
 
   for ($self->{cgi}->param) {      # hunt for the target screen
-    if (/^screen_(.*)$/) {
+    if (/^screen_function(.*)$/) {
       if ($self->_set_screen($1)) {
         $self->{cgi}->delete($_);
         return $self;              # shortcut the rest
@@ -140,7 +140,7 @@ sub import {
         if (@_ and $_[0] eq '-name') {
           $self->{passed}->{$_[1]} = 1;
         }
-        #print "CGI $sym(@_)\n";
+        #warn "CGI $sym(@_)\n";
         &{"CGI::$sym"}(@_);
       }
     }
@@ -152,8 +152,6 @@ sub AUTOLOAD {
   my $func = $AUTOLOAD; $func =~ s/.*:://;
   my $self = $_[0];
 
-  return if $func eq 'DESTROY'; # never propagate DESTROY
-  
   if (my $code = $self->{cgi}->can($func)) {
     no strict 'refs';
     *$func = sub {
@@ -162,6 +160,7 @@ sub AUTOLOAD {
       if (@_>1 and $_[0] eq '-name') {
         $self->{passed}->{$_[1]} = 1;
       }
+      #warn "AL $func(@_)\n";
       &$code($self->{cgi}, @_);
     };
     goto &$func;
@@ -196,11 +195,12 @@ sub dispatch {
 }
 
 sub application { 'CGI::Screen Test' }
+sub default_title { 'Welcome' }
 
 sub title {
   my ($query, $screen, $title)  = @_;
 
-  $query->application . ': ' . ($title || $screen);
+  $query->application . ': ' . ($title || $screen || $query->default_title);
 }
 
 sub headline {
@@ -212,10 +212,10 @@ sub headline {
 sub prologue {
   my $query  = shift;
   my $screen = $query->{'screen_name'};
-  my $title  = $query->{'screen_title'};
+  my $title  = $query->{'screen_title'} || $query->default_title;
   print
-    $query->header    ('-type'  => 'text/html'),
-    $query->start_html('-title' => $query->title($title)),
+    $query->header    ('-type'  => 'text/html', -expires => '+10s'),
+    $query->start_html('-title' => $query->title($screen, $title)),
     $query->_call('headline'),
     $query->start_form
       ;
@@ -265,7 +265,7 @@ sub goto_screen {
 
   $query->submit
     (
-     -name  => 'screen_' . $screen,
+     -name  => 'screen_function' . $screen,
      -value => $name,
     );
 }
@@ -278,7 +278,7 @@ sub url_to_screen {
                                              # announce this function
                                              # ;-(
   
-  $url .= $escape->('screen_' . $screen) . '=' . $escape->($title||'');
+  $url .= $escape->('screen_function' . $screen) . '=' . $escape->($title||'');
   for my $param ($query->param) {
     next if exists $parm{$param};
     for my $value ($query->param($param)) {
@@ -353,7 +353,7 @@ __END__
 
 =head1 NAME
 
-CGI::Screen - Perl extension for easy creation of multi screen CGI-scripts
+CGI::Screen - Perl extension for easy creation of multi screen CGI scripts
 
 =head1 SYNOPSIS
 
@@ -372,18 +372,18 @@ This is B<alpha> software. User visible changes can happen any time.
 =head1 DESCRIPTION
 
 B<CGI::Screen> is a subclass of C<CGI> which allows the esay(TM)
-creation of simple multi screen CGI-Scripts. By 'multi screen' I mean
+creation of simple multi screen CGI scripts. By 'multi screen' I mean
 scripts which present different screens to the user when called with
 different parameters. This is the common case for scripts linking to
 themselves.
 
 To use B<CGI::Screen>, you have to subclass it. For each screen you
 want to present to the user, you must create a method
-C<screen_>I<screen_name>. This method has to produce the HTML code for
+I<screen_name>C<screen_>. This method has to produce the HTML code for
 the screen. CGI::Screen does generate HTTP headers and an HTML
-framework for you. The HTML-framework already contains the C<FORM>
-tags.  You can customize the HTTP headers HTML framework by providing
-callback methods.
+framework for you. The HTML framework already contains the C<FORM>
+tags.  You can customize the HTTP headers and the HTML framework by 
+providing callback methods.
 
 CGI::Screen keeps track of the CGI parameters used in your screen and
 passes old parameters which are not used in the current screen.
@@ -393,7 +393,7 @@ screens the script implements. The C<screen_user> and C<screen_passwd>
 fields are used if you enable the builtin simple authentication.  In
 general you should advice your HTTP server to do authentication. But
 sometimes it is convenient to check the authentication at the script
-level. Especially if you do not have access to yours servers
+level. Especially if you do not have access to your server's
 configuration.
 
 =head2 The constructor C<new>
@@ -406,7 +406,7 @@ subclass. Other parameters are passed to the constructor of C<CGI>.
 
 =item C<-dont_cut_loops>
 
-Normaly the history of pages will not extended if the current page is
+Normaly the history of pages will not be extended if the current page is
 the same as the last page. So looping on a page will not change the
 result of the C<last_screen> method. If the option C<-dont_cut_loops>
 is provided and true, the page will recorded twice. A third visit will
@@ -423,8 +423,8 @@ All applications should provide a B<main> screen by defining a method
 C<main_screen>. This method is called if no (existing) screen is
 specified in the parameters. The method is called with three
 arguments: The query object, the screen name and the screen title
-(More precisely the third parameter (if present) is the text on the
-button or anchor which cause the jump to this page).
+(More precisely the third parameter, if present, is the text on the
+button or anchor which caused the jump to this page).
 
 So the minimal application looks like this:
 
@@ -442,7 +442,7 @@ So the minimal application looks like this:
     print $query->p('This is the Main Screen');
   }
 
-That is not too exiting. Let us add a second screen and allow
+That is not too exciting. Let us add a second screen and allow
 navigation between the screens:
 
   sub main_screen {
@@ -648,7 +648,7 @@ distribution.
 =head1 ACKNOWLEDGEMENTS
 
 I wish to thank Andreas Koenig F<koenig@kulturbox.de> for the
-fruitfully discussion about the design of this module. 
+fruitful discussion about the design of this module. 
 
 =head1 Copyright
 

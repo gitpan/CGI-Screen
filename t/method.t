@@ -34,13 +34,8 @@ my $q = new CGI;
 my $r = new CGI::Screen;
 
 while (<DATA>) {
-  my $orig = eval "\$q->$_";
-  my $now  = eval "\$r->$_";
-  if ($orig ne $now) {
-    print "Testing $_ failed: '$orig' ne '$now'\n";
-    print;
-    print "not ";
-  }
+  print;
+  print "not " if eval "\$q->$_ ne \$r->$_";
   print 'ok ', $.+1, "\n";
 }
 __DATA__

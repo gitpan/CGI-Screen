@@ -19,7 +19,7 @@ WriteMakefile
   (
    'NAME'	=> 'CGI::Screen',
    # $Format: "   'VERSION'    => sprintf('%5.3f', ($ProjectMajorVersion$ * 100 + ( $ProjectMinorVersion$-1))/1000),"$ 
-   'VERSION'    => sprintf('%5.3f', (1 * 100 + ( 22-1))/1000),
+   'VERSION'    => sprintf('%5.3f', (1 * 100 + ( 22))/1000),
    'dist'       => {
                     COMPRESS => 'gzip -9f',
                     PREOP    => 'pod2text lib/CGI/Screen.pm > README',

@@ -1,10 +1,17 @@
+1999-02-05  Ulrich Pfeifer  <upf@de.uu.net>
+
+	* lib/CGI/Screen.pm: Replaced the 'screen_' prefix used to
+	indicate the CGI variable carrying function name to
+	'screen_function'. The old prefix caused spurious warnings as
+	spotted by Julian Morrison.
+
 Sun Jul 26 16:13:21 1998  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* t/import.t, t/method.t: tests will work with some older CGI.pm
- 	Versions also.
+	 Versions also.
 
 	* lib/CGI/Screen.pm (AUTOLOAD): Did propagate destroy.
-
+	
 Sun Jul 12 18:29:43 1998  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* lib/CGI/Screen.pm (_set_screen): Added dont_cut_loops flag.
