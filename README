@@ -1,0 +1,258 @@
+NAME
+    CGI::Screen - Perl extension for easy creation of multi screen cgi-
+    scripts
+
+SYNOPSIS
+      package Foo;
+      use CGI::Screen;
+      use vars qw(@ISA);
+      @ISA = qw(CGI::Screen);
+
+      my $query = new CGI::Screen;
+
+      $query->dispatch;
+
+WARNING
+    This is alpha software. User visible changes can happen any time.
+
+DESCRIPTION
+    CGI::Screen is a subclass of `CGI' which allows for simple multiscreen
+    CGI-Scripts. By 'multiscreen' I mean scripts which present different
+    screens to the user when called with different arguments. This is the
+    common case for scripts linking to themselves.
+
+    To use CGI::Screen, you have to subclass it. For each screen you want to
+    present to the user, you must create a method `screen_'*screen_name*.
+    This method has to produce the HTML code for the screen. CGI::Screen
+    does generate HTTP headers and an HTML framework for you. The HTML-
+    framework already contains the `FORM' tags. You can customize the HTTP
+    headers HTML framework by providing callback methods.
+
+    CGI::Screen keeps track of the CGI parameters used in your screen and
+    passes old parameters which are not used in the current screen.
+
+    It highjacks the parameters `screen_'*, `user' and `passwd' to dispatch
+    the different screens the script implements. The `user' and `passwd'
+    fields are used if you use the builtin simple authentication. In general
+    you should advice your HTTP server to do authentication. But sometimes
+    it is convenient to check the authentication at the script level.
+    Especially if you do not have access to yours servers configuration.
+
+  The constructor `new'
+
+    If the first parameter of `new' ist the string `-screen' the second
+    argument must be a hash reference specifying the options for the
+    subclass. Other parameters are passed to the constructor of `CGI'.
+    Currently no options are used.
+
+  Adding Screens
+
+    All applications should provide a main screen by defining a method
+    `main_screen'. This method is called if no (existing) screen is
+    specified in the parameters. The method is called with three arguments:
+    The query object, the screen name and the screen title (More precisely
+    the third parameter (if present) is the text on the button or anchor
+    which cause the jump to this page).
+
+    So the minimal application looks like this:
+
+      package Foo;
+      use CGI::Screen;
+      use vars qw(@ISA);
+      @ISA = qw(CGI::Screen);
+      
+      my $query = new Foo;
+      
+      $query->dispatch;
+      
+      sub main_screen {
+        my $query = shift;
+      
+        print $query->p('This is the Main Screen');
+      }
+
+    That is not too exiting. Let us add a second screen and allow navigation
+    between the screens:
+
+      sub main_screen {
+        my $query = shift;
+      
+        print
+          $query->p('This is the Main Screen'),
+          $query->goto_screen('second', 'Another Screen');
+      }
+      sub second_screen {
+        my $query = shift;
+      
+        print
+          $query->p('This is the Other Screen'),
+          $query->goto_screen('main', 'Back to Main Screen');
+
+      }
+
+  Moving between screens
+
+    Use the method `goto' to produce code to switch to another screen. You
+    can also produce an anchor instead of a button by calling
+    `link_to_screen' instead of `goto_screen'. For convenience, CGI::Screen
+    keeps track of the last screen for you so that you can link to the
+    previous page:
+
+      my $screen = $query->last_screen;
+      print
+        $query->p("You came from screen $screen. Press "),
+        $query->goto_screen($query->last_screen),
+        $query->p(" to go back");
+
+    `last_screen' returns screen name and title in list context and screen
+    name in scalar context.
+
+  The callbacks
+
+    All callbacks are called with three arguments: The query object, the
+    screen name and the screen title (= button/anchor text). Callbacks
+    should return a string.
+
+    `application'
+    The `application' application method returns a string which is used in
+    the default `title' and `headline' callbacks. The Default method returns
+    the string `"CGI::Screen Test"' and should definitely be overwritten by
+    your application.
+
+    `title'
+    The result of the method is used in the HTTP header and in the default
+    headline. It defaults to the *application*.
+
+    `headline'
+    The `headline' method should return a chunk of HTML code to start the
+    Screen. It defaults to the *title* enclosed in `H1' tags.
+
+  Authentication
+
+    To enable password authentication, define a method `check_auth_user'.
+    The dispatcher will call the method with the user and password entered
+    by the user. The method should return true if the authorisation suceeded
+    and false otherwise. The dispatcher will present the `login_screen' if
+    the authorisation failed.
+
+      sub check_auth_user {
+        my ($query, $user, $passwd) = @_;
+
+        $user eq 'pfeifer';
+      }
+
+    For ip address based authentication define the method `check_auth_ip'.
+
+      sub check_auth_ip {
+        my ($query, $ipaddr) = @_;
+
+       $ipaddr =~ /^(193\.96\.65\.|139\.4\.36\.)/;
+      }
+
+    If you do not like the default login screen, overwrite with your own
+    `login_screen'. Use the CGI parameters `user' and `passwd'.
+
+  Customizing the Title
+
+    You may provide a custom `title' method to generate a title for your
+    screens.
+
+      sub title {
+        my ($query, $screen)  = shift;
+      
+        $query->application . ': ' . $screen;
+      }
+
+  Customizing the Headline
+
+    You may provide a custom `headline' method to generate a html chunk to
+    start your screens.
+
+      sub headline { $_[0]->h1(title(@_)) }
+
+    You should overwrite the `application' method if you use the default
+    title and headline.
+
+      sub application { 'CGI::Screen Test' }
+
+  Customizing the Trailer
+
+    For a custom Trailer, define the `trailer' method.
+
+      sub trailer {
+        my ($query, $screen)  = shift;
+      
+        "End of Screen $screen";
+      }
+
+  Multiple Forms
+
+    If you want to have multiple forms on one screen, call the method
+    `new_form'.
+
+      sub multi_screen {
+         my $query = shift;
+
+         print
+           $query->p('This is the Main Screen'),
+           $query->textfield('foo'),
+           $query->goto('First'),
+           $query->new_form,
+           $query->textfield('foo'),
+           $query->goto('Second');
+      }
+
+  Non HTML screens
+
+    You can create non HTML screens by defining a *name*`_data' method
+    instead of a <name>`_screen' method. For `data' screens you have to
+    generate HTTP headers yourself.
+
+      sub gif_data {
+        my $query = shift;
+        
+        print $query->header(
+                             -type    => 'image/gif',
+                             -status  => '200 OK',
+                             -expires => '+120s',
+                            );
+        my $font  = $query->param('font');
+        my $w     = GD::Font->$font()->width;
+        my $h     = GD::Font->$font()->height;
+        my $im    = GD::Image->new((length($query->param('foo'))+2)*$w,$h);
+        my $white = $im->colorAllocate(255,255,255);
+        my $red   = $im->colorAllocate(255,0,0);
+        my $black = $im->colorAllocate(0,0,0);
+        $im->transparent($white);
+        $im->arc(8,8,5,5,0,360,$red);
+        $im->string(GD::Font->$font(),10,0,$query->param('foo'),$black);
+        print $im->gif;
+      }
+
+  Keeping parameter values
+
+    CGI::Screen keeps track of the CGI parameters used in the current form.
+    It simply looks at the first parameter in any call to a CGI method. If
+    the first parameter is `-name', the second parameter is marked as *used
+    parameter*. CGI::Screen passed all current parameter values not used in
+    hidden fields or in the query string of an anchor. So do not use old
+    style CGI calls to bypass this mechanism or you will end up with
+    multiple values for the parameters.
+
+    If you want to get rid of a parameter, you must explicitely call the
+    `delete' method of CGI.
+
+AUTHOR
+    Ulrich Pfeifer <pfeifer@wait.de>
+
+SEE ALSO
+    The CGI(3) manual and the demo CGI script screen included in the
+    distribution.
+
+Copyright
+    The CGI::Screen module is Copyright (c) 1997,1998 Ulrich Pfeifer.
+    Germany. All rights reserved.
+
+    You may distribute under the terms of either the GNU General Public
+    License or the Artistic License, as specified in the Perl README file.
+
