@@ -1,18 +1,11 @@
-Mon Dec 29 10:26:42 1997  Ulrich Pfeifer  <pfeifer@wait.de>
+Mon Dec 29 18:44:24 1997  Ulrich Pfeifer  <pfeifer@wait.de>
 
-	* Makefile.PL: Added new VERSION algorithm and 'README' preop.
+	* eg/screen: Calls constructor vie C<__PACKAGE__->new> as
+ 	suggested by Andreas Koenig.
 
-	* MANIFEST: Removed test.pl, added README.
-
-	* screen (gif_data): Produces now GIF even if GD is missing.
-
-	* lib/CGI/Screen.pm: Added copyright notice and documentation for
- 	data screens
-
-	* CGI-Screen.prj : moved 'screen' to 'eg' subdirectory
+	* lib/CGI/Screen.pm: Documentation uses C<__PACKAGE__->new>
 
 Revision history for Perl extension CGI::Screen.
 
 0.01  Sun Nov 30 17:04:06 1997
-	- original version; created by h2xs 1.18
-
+        - original version; created by h2xs 1.18

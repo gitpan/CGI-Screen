@@ -1,25 +1,28 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 #                              -*- Mode: Perl -*- 
 # $Basename: screen $
-# $Revision: 1.15 $
+# $Revision: 1.16 $
 # Author          : Ulrich Pfeifer
 # Created On      : Sun Nov 30 17:38:52 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Mon Dec 29 10:13:40 1997
+# Last Modified On: Mon Dec 29 18:54:16 1997
 # Language        : CPerl
+# Update Count    : 1
+# Status          : Unknown, Use with caution!
 # 
-# (C) Copyright 1997, UUNET Deutschland GmbH, Germany
+# (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
 # 
-# use lib qw(/home/upf/lib/perl5/site_perl);
+# 
+
+# change/delete this line to match your local settings
 use lib qw(/usr/src/perl/ext/CGI-Screen/lib);
 
-package Foo;
 use IO::File;
 use CGI::Screen;        
 use vars qw(@ISA);
 @ISA = qw(CGI::Screen::Debug); # use 'CGI::Screen' if your application works
 
-my $query = new Foo;
+my $query = __PACKAGE__->new;
 
 $query->dispatch;
 

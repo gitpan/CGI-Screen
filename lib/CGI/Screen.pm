@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.14 $
+# $Revision: 1.15 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Mon Dec 29 10:22:03 1997
+# Last Modified On: Mon Dec 29 19:17:45 1997
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -15,8 +15,8 @@ use CGI;
 use strict;
 use vars qw($VERSION $AUTOLOAD);
 
-# $Format: "$VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ( $ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + ( 6-1))/1000;
+# $Format: "$VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
+$VERSION = sprintf '%5.3f', (1 * 100 + (7-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -76,20 +76,19 @@ sub new {
   if (my $func = $self->can('check_auth_ip')) {
     &$func($self, $ENV{REMOTE_ADDR})
       or $self->_set_screen('login', 'Will not serve your ip address')
-        && return $self;       # shortcut the rest
+        && return $self;           # shortcut the rest
   }
   if (my $func = $self->can('check_auth_user')) {
     $self->_check_auth_user 
       or $self->_set_screen('login', 'Need user id and password')
-        && return $self;       # shortcut the rest
+        && return $self;           # shortcut the rest
   }
 
- PARM:                          # hunt for the target screen
-  for ($self->{cgi}->param) {
+  for ($self->{cgi}->param) {      # hunt for the target screen
     if (/^screen_(.*)$/) {
       if ($self->_set_screen($1)) {
         $self->{cgi}->delete($_);
-        return $self;             # shortcut the rest
+        return $self;              # shortcut the rest
       } 
     }
   }
@@ -276,16 +275,15 @@ __END__
 
 =head1 NAME
 
-CGI::Screen - Perl extension for easy creation of multi screen cgi-scripts
+CGI::Screen - Perl extension for easy creation of multi screen CGI-scripts
 
 =head1 SYNOPSIS
 
-  package Foo;
   use CGI::Screen;
   use vars qw(@ISA);
   @ISA = qw(CGI::Screen);
 
-  my $query = new CGI::Screen;
+  my $query = __PACKAGE__->new;
 
   $query->dispatch;
 
@@ -295,10 +293,11 @@ This is B<alpha> software. User visible changes can happen any time.
 
 =head1 DESCRIPTION
 
-B<CGI::Screen> is a subclass of C<CGI> which allows for simple
-multiscreen CGI-Scripts. By 'multiscreen' I mean scripts which present
-different screens to the user when called with different
-arguments. This is the common case for scripts linking to themselves.
+B<CGI::Screen> is a subclass of C<CGI> which allows the esay(TM)
+creation of simple multi screen CGI-Scripts. By 'multi screen' I mean
+scripts which present different screens to the user when called with
+different parameters. This is the common case for scripts linking to
+themselves.
 
 To use B<CGI::Screen>, you have to subclass it. For each screen you
 want to present to the user, you must create a method
@@ -321,7 +320,7 @@ to yours servers configuration.
 
 =head2 The constructor C<new>
 
-If the first parameter of C<new> ist the string C<-screen> the second
+If the first parameter of C<new> is the string C<-screen> the second
 argument must be a hash reference specifying the options for the
 subclass. Other parameters are passed to the constructor of C<CGI>.
 Currently no options are used.
@@ -337,12 +336,11 @@ button or anchor which cause the jump to this page).
 
 So the minimal application looks like this:
 
-  package Foo;
   use CGI::Screen;
   use vars qw(@ISA);
   @ISA = qw(CGI::Screen);
   
-  my $query = new Foo;
+  my $query = __PACKAGE__->new;
   
   $query->dispatch;
   
@@ -417,8 +415,8 @@ Screen. It defaults to the I<title> enclosed in C<H1> tags.
 To enable password authentication, define a method
 C<check_auth_user>. The dispatcher will call the method with the user
 and password entered by the user. The method should return true if the
-authorisation suceeded and false otherwise. The dispatcher will
-present the C<login_screen> if the authorisation failed.
+authentication succeeded and false otherwise. The dispatcher will
+present the C<login_screen> if the authentication failed.
 
   sub check_auth_user {
     my ($query, $user, $passwd) = @_;
@@ -427,7 +425,7 @@ present the C<login_screen> if the authorisation failed.
   }
 
 
-For ip address based authentication define the method
+For IP address based authentication define the method
 C<check_auth_ip>.
 
   sub check_auth_ip {
@@ -453,7 +451,7 @@ screens.
 
 =head2 Customizing the Headline
 
-You may provide a custom C<headline> method to generate a html chunk
+You may provide a custom C<headline> method to generate a HTML chunk
 to start your screens.
 
   sub headline { $_[0]->h1(title(@_)) }
@@ -526,7 +524,7 @@ values not used in hidden fields or in the query string of an
 anchor. So do not use old style CGI calls to bypass this mechanism or
 you will end up with multiple values for the parameters.
 
-If you want to get rid of a parameter, you must explicitely call the
+If you want to get rid of a parameter, you must explicitly call the
 C<delete> method of CGI.
 
 =head1 AUTHOR
@@ -538,9 +536,14 @@ Ulrich Pfeifer E<lt>F<pfeifer@wait.de>E<gt>
 The CGI(3) manual and the demo CGI script F<screen> included in the
 distribution.
 
+=head1 ACKNOWLEDGEMENTS
+
+I wish to thank Andreas Koenig F<koenig@kulturbox.de> for the
+fruitfully discussion about the design of this module. 
+
 =head1 Copyright
 
-The B<CGI::Screen> module is Copyright (c) 1997,1998 Ulrich
+The B<CGI::Screen> module is Copyright (c) 1997 Ulrich
 Pfeifer. Germany.  All rights reserved.
 
 You may distribute under the terms of either the GNU General Public
