@@ -46,9 +46,10 @@ DESCRIPTION
     `-dont_cut_loops'
         Normaly the history of pages will not be extended if the current
         page is the same as the last page. So looping on a page will not
-        change the result of the `last_screen' method. If the option `-
-        dont_cut_loops' is provided and true, the page will recorded twice.
-        A third visit will be interpreted as jump back to the first visit.
+        change the result of the `last_screen' method. If the option
+        `-dont_cut_loops' is provided and true, the page will recorded
+        twice. A third visit will be interpreted as jump back to the first
+        visit.
 
         *That sounds weird. Will have to figure out a way to recognize back
         jumps independent of the history.*
@@ -67,14 +68,14 @@ DESCRIPTION
       use CGI::Screen;
       use vars qw(@ISA);
       @ISA = qw(CGI::Screen);
-      
+  
       my $query = __PACKAGE__->new;
-      
+  
       $query->dispatch;
-      
+  
       sub main_screen {
         my $query = shift;
-      
+  
         print $query->p('This is the Main Screen');
       }
 
@@ -83,14 +84,14 @@ DESCRIPTION
 
       sub main_screen {
         my $query = shift;
-      
+  
         print
           $query->p('This is the Main Screen'),
           $query->goto_screen('second', 'Another Screen');
       }
       sub second_screen {
         my $query = shift;
-      
+  
         print
           $query->p('This is the Other Screen'),
           $query->goto_screen('main', 'Back to Main Screen');
@@ -104,6 +105,7 @@ DESCRIPTION
     calling `link_to_screen' instead of `goto_screen'. You may pass
     additional parameters to encode:
 
+        my %score = some_fancy_search_algorithm($self->param('query'));
         for my $docid (keys %score) {
           print $query->link_to_screen('display', $title{$docid},
                                        'docid' => $docid,
@@ -177,7 +179,7 @@ DESCRIPTION
 
       sub title {
         my ($query, $screen)  = shift;
-      
+  
         $query->application . ': ' . $screen;
       }
 
@@ -199,7 +201,7 @@ DESCRIPTION
 
       sub trailer {
         my ($query, $screen)  = shift;
-      
+  
         "End of Screen $screen";
       }
 
@@ -214,10 +216,10 @@ DESCRIPTION
          print
            $query->p('This is the Main Screen'),
            $query->textfield('foo'),
-           $query->goto('First'),
+           $query->goto_screen('first', 'First'),
            $query->new_form,
            $query->textfield('foo'),
-           $query->goto('Second');
+           $query->goto_screen('second', 'Second');
       }
 
   Non HTML screens
@@ -228,7 +230,7 @@ DESCRIPTION
 
       sub gif_data {
         my $query = shift;
-        
+    
         print $query->header(
                              -type    => 'image/gif',
                              -status  => '200 OK',

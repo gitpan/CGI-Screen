@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.27 $
+# $Revision: 1.28 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Fri Feb  5 17:05:16 1999
+# Last Modified On: Mon Feb 14 17:30:32 2000
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (22))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (20-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -469,6 +469,7 @@ another screen.  You can also produce an anchor instead of a button by
 calling C<link_to_screen> instead of C<goto_screen>. You may pass
 additional parameters to encode:
 
+    my %score = some_fancy_search_algorithm($self->param('query'));
     for my $docid (keys %score) {
       print $query->link_to_screen('display', $title{$docid},
                                    'docid' => $docid,
@@ -586,10 +587,10 @@ C<new_form>.
      print
        $query->p('This is the Main Screen'),
        $query->textfield('foo'),
-       $query->goto('First'),
+       $query->goto_screen('first', 'First'),
        $query->new_form,
        $query->textfield('foo'),
-       $query->goto('Second');
+       $query->goto_screen('second', 'Second');
   }
 
 =head2 Non HTML screens
