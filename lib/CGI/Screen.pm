@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.15 $
+# $Revision: 1.16 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Mon Dec 29 19:17:45 1997
+# Last Modified On: Tue Dec 30 09:52:44 1997
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (7-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (8-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -204,7 +204,7 @@ sub goto_screen {
     );
 }
 
-sub link_to_screen {
+sub url_to_screen {
   my ($query, $screen, $name) = @_;
   my $url = $query->url . '?';
   my $escape = $query->{cgi}->can('escape'); # should have our own
@@ -220,8 +220,13 @@ sub link_to_screen {
         $escape->($value);
     }
   }
-  # print $query->code($url);
   $url;
+}
+
+sub link_to_screen {
+  my ($query, $screen, $name) = @_;
+
+  $query->a({href => $query->url_to_screen($screen, $name)}, $name);
 }
 
 sub login_screen {

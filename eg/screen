@@ -5,9 +5,9 @@
 # Author          : Ulrich Pfeifer
 # Created On      : Sun Nov 30 17:38:52 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Mon Dec 29 18:54:16 1997
+# Last Modified On: Tue Dec 30 09:49:30 1997
 # Language        : CPerl
-# Update Count    : 1
+# Update Count    : 6
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
@@ -15,7 +15,7 @@
 # 
 
 # change/delete this line to match your local settings
-use lib qw(/usr/src/perl/ext/CGI-Screen/lib);
+# use lib qw(/home/upf/pl/CGI-Screen/lib);
 
 use IO::File;
 use CGI::Screen;        
@@ -124,7 +124,8 @@ sub media_screen {
 
   print
     $query->p('Your Input as gif:',
-              $query->img({src => $query->link_to_screen('gif')}));
+              $query->img({src => $query->url_to_screen('gif')})),
+    $query->link_to_screen('gif', 'GIF only');
  }
 
 sub gif_data {
