@@ -1,3 +1,15 @@
+Sun Jun 28 09:39:19 1998  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* lib/CGI/Screen.pm (AUTOLOAD): Now actually generates the code.
+  	Should speed up calls for freqently used methods like
+ 	->TD. Especially when used with mod_perl.
+	(url_to_screen, link-to_screen): Now take additional parameters to
+ 	encode in the url.
+	(_set_screen): Now saves up to seven back screens to support
+ 	sensible backing out a dead ends.
+	(_set_screen): Now prefers *_data methods.
+	(import): Experimental support for importing CGI.pm stuff
+
 Tue Dec 30 09:49:58 1997  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* lib/CGI/Screen.pm (link_to_screen): renamed to url_to_screen.

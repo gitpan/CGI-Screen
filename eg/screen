@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 #                              -*- Mode: Perl -*- 
 # $Basename: screen $
-# $Revision: 1.16 $
+# $Revision: 1.20 $
 # Author          : Ulrich Pfeifer
 # Created On      : Sun Nov 30 17:38:52 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Tue Dec 30 09:49:30 1997
+# Last Modified On: Sun Jun 28 13:18:58 1998
 # Language        : CPerl
-# Update Count    : 6
+# Update Count    : 44
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1997, Ulrich Pfeifer, all rights reserved.
@@ -18,7 +18,7 @@
 # use lib qw(/home/upf/pl/CGI-Screen/lib);
 
 use IO::File;
-use CGI::Screen;        
+use CGI::Screen qw(:all);        
 use vars qw(@ISA);
 @ISA = qw(CGI::Screen::Debug); # use 'CGI::Screen' if your application works
 
@@ -44,14 +44,16 @@ sub trailer {
       $query->goto_screen('source', 'See screen source') .
         $query->goto_screen('env', 'Show CGI environement') . 
           $query->goto_screen('main', 'Main screen') .
-            $query->goto_screen('manual', 'See manual');
+            $query->goto_screen('manual', 'See manual') .
+              $query->goto_screen('rate', 'Rating')
+                ;
 }
 
 sub main_screen {
   my $query = shift;
 
   print
-    $query->p('This is the Main Screen'),
+    p({foo=>'bar'}, 'This is the Main Screen'),
     $query->textfield(-name => 'foo'),
     $query->goto_screen('first', 'Save'), '<BR>',
     $query->hr,
@@ -59,6 +61,32 @@ sub main_screen {
     $query->goto_screen('second', 'Discard'),
     ;
   
+}
+
+sub rate_screen {
+   my $query = shift;
+
+   print
+     $query->p('This is the Rate Screen.'),
+     $query->p('How do you rate the quality of this module?'),
+     $query->radio_group('-name'    => 'quality',
+                         '-values'  => [qw(poor resonable good excellent)],
+                         '-default' => 'poor',
+                        ),
+     $query->p('What features does the module exhibit?'),
+     $query->checkbox_group(
+                            '-name'      => 'fetures',
+                            '-values'    => [
+                                             'easy to use',
+                                             'compact',
+                                             'extensible',
+                                             'well documented',
+                                            ],
+                            '-default'   => ['easy to use'],
+                            '-linebreak' => 'true',
+                           ),
+    $query->goto_screen('main', 'Save Rating'), '<BR>',
+    ;
 }
 
 sub first_screen {
@@ -69,10 +97,10 @@ sub first_screen {
     $query->p('You entered: "', $query->code($query->param('foo')),'"'),
     $query->goto_screen('main', 'Edit again'),
     $query->scrolling_list('-name' => 'font',
-                          '-size' => 1,
-                          '-values' => [
-                                      qw(Large MediumBold Small)
-                                     ]),
+                           '-size' => 1,
+                           '-values' => [
+                                         qw(Large MediumBold Small)
+                                        ]),
     $query->goto_screen('media', 'See input as GIF')
     ;
 }
@@ -123,9 +151,18 @@ sub media_screen {
   my $query = shift;
 
   print
-    $query->p('Your Input as gif:',
+    $query->p('You choosed:',
               $query->img({src => $query->url_to_screen('gif')})),
     $query->link_to_screen('gif', 'GIF only');
+
+  print $query->p("All font sizes:\n");
+  for my $font (qw(Large MediumBold Small)) {
+    print
+      $query->TR
+        ($query->td
+         ($query->img ({src => $query->url_to_screen('gif', 'Foo',
+                                                     'font' => $font)})));
+  }
  }
 
 sub gif_data {

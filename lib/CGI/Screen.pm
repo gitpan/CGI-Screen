@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.17 $
+# $Revision: 1.24 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Tue Mar  3 12:20:42 1998
+# Last Modified On: Sun Jun 28 13:30:01 1998
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -15,16 +15,16 @@ use CGI;
 use strict;
 use vars qw($VERSION $AUTOLOAD);
 
-# $Format: "$VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (9-1))/1000;
+# $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
+$VERSION = sprintf '%5.3f', (1 * 100 + (16-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
   my $func;
 
-  if      ($self->{screen_func} = $self->can($screen . '_screen')) {
-  } elsif ($self->{screen_func} = $self->can($screen . '_data'  )) {
+  if      ($self->{screen_func} = $self->can($screen . '_data'  )) {
     $self->{no_headers}  = 1;
+  } elsif ($self->{screen_func} = $self->can($screen . '_screen')) {
   } else {
     warn "No such screen: '$screen'\n";
     return;
@@ -33,10 +33,20 @@ sub _set_screen {
   $self->{screen_title} = $title || $self->param('screen_'.$screen);
 
   # We keep track of the screens here in order to be able to jump back
-  $self->{screen_last_name}  = $self->param('screen_last_name');
-  $self->{screen_last_title} = $self->param('screen_last_title');
-  $self->param('screen_last_name',  $self->{screen_name});
-  $self->param('screen_last_title', $self->{screen_title});
+  my @screen_last_name  = $self->param('screen_last_name');
+  my @screen_last_title = $self->param('screen_last_title');
+  if ( @screen_last_name > 1 and $screen_last_name[-2] eq $screen) {
+    # User did hit a 'back' button
+    pop @screen_last_name; pop @screen_last_title;
+  } else {
+    while (@screen_last_name > 7) {shift @screen_last_name; shift @screen_last_title;}
+    push @screen_last_name,  $self->{screen_name};
+    push @screen_last_title, $self->{screen_title};
+  }
+  $self->param('screen_last_name',  @screen_last_name);
+  $self->param('screen_last_title', @screen_last_title);
+  $self->{screen_last_name}  = $screen_last_name[-2];
+  $self->{screen_last_title} = $screen_last_title[-2];
 
   $self;                        # return true
 }
@@ -59,18 +69,19 @@ sub _check_auth_user {
 
   $query->check_auth_user($user, $passwd);
 }
+my $D;
 
 sub new {
   my $type  = shift;
   my $self  = {};
 
-  if (@_ and $_[0] eq '-screen') { # grab our parameters
+  if (@_>1 and $_[0] eq '-screen') { # grab our parameters
     shift; $self = shift;
   }
 
   $self->{cgi} = CGI->new(@_);
 
-  bless $self, $type;
+  bless $self, $type; $D = $self;
 
   # Poor man's Authentication. 
   if (my $func = $self->can('check_auth_ip')) {
@@ -94,19 +105,69 @@ sub new {
   }
 
   # provide a default screen
-  $self->_set_screen('main', 'Welcome');
+  $self->_set_screen('main', '');
+}
+
+sub import {
+  my $pkg = shift;
+  my ($callpack, $callfile, $callline) = caller;
+  my %old;
+
+  package CGI::Screen::import;
+
+  for my $sym (keys %CGI::Screen::import) {
+    $old{$sym}++;# if defined &$sym;
+  }
+
+  CGI->import(@_);
+
+  no strict 'refs';
+  for my $sym (keys %CGI::Screen::import::) {
+    if (not exists $old{$sym} and
+        not defined &{"CGI::Screen::${sym}"}) {
+      next if $sym =~ /^(BEGIN|DESTROY|END)$/;
+      *{"${callpack}::$sym"} = sub {
+        my $self = $D;
+        if (
+            ref $_[0] and
+            eval { $_[0]->isa('CGI::Screen') }
+           ) {
+          $self = shift;
+        }
+        if (@_ and $_[0] eq '-name') {
+          $self->{passed}->{$_[1]} = 1;
+        }
+        &{"CGI::$sym"}($self->{cgi}, @_);
+      }
+    }
+  }
+
 }
 
 sub AUTOLOAD {
   my $func = $AUTOLOAD; $func =~ s/.*:://;
-  my $self = shift;
+  my $self = $_[0];
 
-  if (@_ and $_[0] eq '-name') {
-    $self->{passed}->{$_[1]} = 1;
+  if (my $code = $self->{cgi}->can($func)) {
+    no strict 'refs';
+    *$func = sub {
+      my $self = shift;
+
+      if (@_>1 and $_[0] eq '-name') {
+        $self->{passed}->{$_[1]} = 1;
+      }
+      &$code($self->{cgi}, @_);
+    };
+    goto &$func;
+  } else {                      # Function not yet AUTOLOADED in CGI.pm
+    my $self = shift;
+
+    if (@_>1 and $_[0] eq '-name') {
+      $self->{passed}->{$_[1]} = 1;
+    }
+    $self->{cgi}->$func(@_);    # Force autoloading in CGI.pm
   }
-  $self->{cgi}->$func(@_);
 }
-
 
 sub _call {
   my ($query, $method)  = @_;
@@ -193,7 +254,6 @@ sub close_form {
   $html .= $query->endform;
 }
 
-
 sub goto_screen {
   my ($query, $screen, $name) = @_;
 
@@ -205,28 +265,33 @@ sub goto_screen {
 }
 
 sub url_to_screen {
-  my ($query, $screen, $name) = @_;
+  my ($query, $screen, $title, %parm) = @_;
   my $url = $query->url . '?';
   my $escape = $query->{cgi}->can('escape'); # should have our own
                                              # since CGI does not
                                              # announce this function
                                              # ;-(
   
-  $url .= $escape->('screen_' . $screen) . '=' . $escape->($name);
+  $url .= $escape->('screen_' . $screen) . '=' . $escape->($title||'');
   for my $param ($query->param) {
-    next if exists $query->{passed}->{$param};
+    next if exists $query->{passed}->{$param} or  exists $parm{$param};
     for my $value ($query->param($param)) {
       $url .=  '&' . $escape->($param) . '=' .
         $escape->($value);
     }
   }
+
+  for my $param (keys %parm) {
+    $url .=  '&' . $escape->($param) . '=' . $escape->($parm{$param});
+  }
+  
   $url;
 }
 
 sub link_to_screen {
-  my ($query, $screen, $name) = @_;
+  my ($query, $screen, $title, %parm) = @_;
 
-  $query->a({href => $query->url_to_screen($screen, $name)}, $name);
+  $query->a({href => $query->url_to_screen($screen, $title, %parm)}, $title);
 }
 
 sub login_screen {
@@ -269,7 +334,9 @@ sub prologue {
   $query->SUPER::prologue;
   
   for ($query->param) {
-    push @tab, $query->TR($query->td($_) , $query->td($query->param($_)));
+    next if /^screen_/; # you don't want to know!
+    push @tab, $query->TR($query->td($_),
+                          $query->td(join ', ', $query->param($_)));
   }
   print $query->table({border => 1}, @tab);
 }
@@ -379,9 +446,18 @@ navigation between the screens:
 
 Use the method C<goto_screen> to produce a button for switching to
 another screen.  You can also produce an anchor instead of a button by
-calling C<link_to_screen> instead of C<goto_screen>. For convenience,
-CGI::Screen keeps track of the last screen for you so that you can
-link to the previous page:
+calling C<link_to_screen> instead of C<goto_screen>. You may pass
+additional parameters to encode:
+
+    for my $docid (keys %score) {
+      print $query->link_to_screen('display', $title{$docid},
+                                   'docid' => $docid,
+                                   'score' => $score{$docid});
+    }
+
+For convenience, CGI::Screen keeps track of the last screen for you so
+that you can link to the previous page. Note that only the last seven
+screens are saved:
 
   my $screen = $query->last_screen;
   print
@@ -390,7 +466,9 @@ link to the previous page:
     $query->p(" to go back");
 
 C<last_screen> returns screen name and title in list context and
-screen name in scalar context.
+screen name in scalar context. Do not use the CGI parameters
+C<screen_last_*> since they are changed before you can get hold of
+them ;-P
 
 =head2 The callbacks
 
@@ -532,6 +610,10 @@ you will end up with multiple values for the parameters.
 
 If you want to get rid of a parameter, you must explicitly call the
 C<delete> method of CGI.
+
+=head1 BUGS
+
+Support for importing from CGI.pm is incomplete.
 
 =head1 AUTHOR
 
