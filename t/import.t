@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #                              -*- Mode: Perl -*- 
 # $Basename: import.t $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 # Author          : Ulrich Pfeifer
 # Created On      : Sun Jul 12 22:31:12 1998
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Sun Jul 12 22:36:21 1998
+# Last Modified On: Sun Jul 26 16:15:18 1998
 # Language        : CPerl
-# Update Count    : 5
+# Update Count    : 6
 # Status          : Unknown, Use with caution!
 # 
 # (C) Copyright 1998, Ulrich Pfeifer, all rights reserved.
@@ -32,7 +32,12 @@ $ENV{SERVER_PORT} = 8080;
 $ENV{SERVER_NAME} = 'the.good.ship.lollypop.com';
 
 while (<DATA>) {
-  print "not " if eval "CGI::$_ ne $_";
+  my $orig = eval "CGI::$_";
+  my $now  = eval $_;
+  if ($orig ne $now) {
+    print "Testing $_ failed: '$orig' ne '$now'\n";
+    print "not ";
+  }
   print 'ok ', $.+1, "\n";
 }
 __DATA__

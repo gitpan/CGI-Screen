@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.29 $
+# $Revision: 1.30 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Sun Jul 12 22:52:58 1998
+# Last Modified On: Wed Jul 22 20:31:39 1998
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (21-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (22-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -152,6 +152,8 @@ sub AUTOLOAD {
   my $func = $AUTOLOAD; $func =~ s/.*:://;
   my $self = $_[0];
 
+  return if $func eq 'DESTROY'; # never propagate DESTROY
+  
   if (my $code = $self->{cgi}->can($func)) {
     no strict 'refs';
     *$func = sub {
