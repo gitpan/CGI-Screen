@@ -120,7 +120,7 @@ DESCRIPTION
     `last_screen' returns screen name and title in list context and
     screen name in scalar context. Do not use the CGI parameters
     `screen_last_*' since they are changed before you can get hold
-    of them ;-P
+    of them `;-P'
 
   The callbacks
 

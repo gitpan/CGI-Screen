@@ -1,3 +1,10 @@
+Fri Jul 10 21:52:38 1998  Ulrich Pfeifer  <pfeifer@wait.de>
+
+	* lib/CGI/Screen.pm (_set_screen): Jumps to the same screen are
+ 	not added to the history any more.
+	(url_to_screen): Does not care about passed parameters any
+ 	more. Bad braino :-(
+
 Sun Jun 28 09:39:19 1998  Ulrich Pfeifer  <pfeifer@wait.de>
 
 	* lib/CGI/Screen.pm (AUTOLOAD): Now actually generates the code.

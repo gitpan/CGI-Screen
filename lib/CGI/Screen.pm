@@ -1,10 +1,10 @@
 #                              -*- Mode: Perl -*- 
 # $Basename: Screen.pm $
-# $Revision: 1.24 $
+# $Revision: 1.25 $
 # Author          : Ulrich Pfeifer
 # Created On      : Thu Dec 18 09:26:31 1997
 # Last Modified By: Ulrich Pfeifer
-# Last Modified On: Sun Jun 28 13:30:01 1998
+# Last Modified On: Fri Jul 10 21:52:31 1998
 # Language        : CPerl
 # 
 # (C) Copyright 1997, Ulrich Pfeifer
@@ -16,7 +16,7 @@ use strict;
 use vars qw($VERSION $AUTOLOAD);
 
 # $Format: "$\VERSION = sprintf '%5.3f', ($ProjectMajorVersion$ * 100 + ($ProjectMinorVersion$-1))/1000;"$
-$VERSION = sprintf '%5.3f', (1 * 100 + (16-1))/1000;
+$VERSION = sprintf '%5.3f', (1 * 100 + (17-1))/1000;
 
 sub _set_screen {
   my ($self, $screen, $title)  = @_;
@@ -38,7 +38,7 @@ sub _set_screen {
   if ( @screen_last_name > 1 and $screen_last_name[-2] eq $screen) {
     # User did hit a 'back' button
     pop @screen_last_name; pop @screen_last_title;
-  } else {
+  } elsif (@screen_last_name and $screen_last_name[-1] ne $screen) {
     while (@screen_last_name > 7) {shift @screen_last_name; shift @screen_last_title;}
     push @screen_last_name,  $self->{screen_name};
     push @screen_last_title, $self->{screen_title};
@@ -274,7 +274,7 @@ sub url_to_screen {
   
   $url .= $escape->('screen_' . $screen) . '=' . $escape->($title||'');
   for my $param ($query->param) {
-    next if exists $query->{passed}->{$param} or  exists $parm{$param};
+    next if exists $parm{$param};
     for my $value ($query->param($param)) {
       $url .=  '&' . $escape->($param) . '=' .
         $escape->($value);
@@ -468,7 +468,7 @@ screens are saved:
 C<last_screen> returns screen name and title in list context and
 screen name in scalar context. Do not use the CGI parameters
 C<screen_last_*> since they are changed before you can get hold of
-them ;-P
+them C<;-P>
 
 =head2 The callbacks
 
